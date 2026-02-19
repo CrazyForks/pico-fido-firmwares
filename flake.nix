@@ -1,41 +1,35 @@
 {
-  description = "pico-fido matrix build flake";
+  description = "pico-fido-firmwares matrix build flake";
 
   inputs = {
+    flake-parts.url = "github:hercules-ci/flake-parts";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs =
-    {
-      self,
-      nixpkgs,
-      flake-utils,
-    }:
-    flake-utils.lib.eachDefaultSystem (
-      system:
-      let
-        pkgs = nixpkgs.legacyPackages.${system};
-        lib = nixpkgs.lib;
-        allSupportedBoards = lib.filter (s: s != "" && !(lib.hasPrefix "#" s)) (
-          lib.splitString "\n" (lib.trim (builtins.readFile ./allSupportedBoards.txt))
-        );
-        argMatrix = lib.cartesianProduct {
-          picoBoard = allSupportedBoards;
-          vidpid = [ null ];
-          eddsa = [
-            false
-            true
-          ];
-        };
-        allFirmwareDrvs = map (
-          args: pkgs.callPackage ./default.nix { inherit (args) picoBoard vidpid eddsa; }
-        ) argMatrix;
-      in
+  outputs = inputs@{ flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } (
+      { lib, ... }:
       {
-        packages.default = pkgs.symlinkJoin {
-          name = "all-pico-fido-firmwares";
-          paths = allFirmwareDrvs;
+        systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ];
+        perSystem = { config, self', inputs', pkgs, system, ... }:
+        let
+          picofidoBoards = lib.filter
+            (s: s != "" && !(lib.hasPrefix "#" s))
+            (lib.splitString "\n" (lib.trim (builtins.readFile ./pico-fido-boards.txt)));
+          picofidoArgMatrix = lib.cartesianProduct {
+            picoBoard = picofidoBoards;
+            enableEdDSA = [ true false ];
+          };
+          picofidoFirmwares = map (args: pkgs.callPackage ./pkgs/pico-fido/default.nix { inherit (args) picoBoard enableEdDSA; }) picofidoArgMatrix;
+        in
+        {
+          packages = {
+            pico-fido = pkgs.callPackage ./pkgs/pico-fido/default.nix { };
+            pico-fido-firmwares = pkgs.symlinkJoin {
+              name = "pico-fido-firmwares";
+              paths = picofidoFirmwares;
+            };
+          };
         };
       }
     );
