@@ -30,5 +30,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.releaseTag }}
-          files: result/share/pico-fido/*
           make_latest: true
+
+      - name: Upload files
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          nix shell nixpkgs#gh -c bash -c '
+            printf "%s\0" result/share/pico-fido/* | xargs -0 -P 4 -I {} gh release upload "${{ github.event.inputs.releaseTag }}" "{}" --clobber
+          '
