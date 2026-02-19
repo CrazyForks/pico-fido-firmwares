@@ -1,0 +1,37 @@
+name: pico-fido-firmwares matrix build
+
+on:
+  workflow_dispatch:
+    inputs:
+      releaseTag:
+        type: string
+        description: Tag used at release
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Matrix compile
+        run: nix build .#pico-fido-firmwares
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.releaseTag }}
+          files: result/share/pico-fido/*
+          make_latest: true
