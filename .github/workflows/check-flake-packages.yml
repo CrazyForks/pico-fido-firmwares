@@ -24,4 +24,4 @@ jobs:
     - name: Check evaluation
       run: nix flake check
     - name: Build nix packages
-      run: nix build --no-link --print-build-logs .#pico-fido
+      run: nix build --no-link --print-build-logs .#pico-fido .#pico-openpgp .#pico-fido2

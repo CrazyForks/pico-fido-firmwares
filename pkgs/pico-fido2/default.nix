@@ -31,20 +31,20 @@ assert lib.assertMsg (
   (vidpid == "") || (usbVID == "" && usbPID == "")
 ) "pico-openpgp: Arguments 'vidpid' and 'usbVID/usbPID' could not be set at the same time.";
 pico-lib.mkPicoDerivation rec {
-  pname = "pico-fido";
+  pname = "pico-fido2";
   version = "7.4.2-librekeys";
 
   src = fetchFromGitHub {
     owner = "librekeys";
-    repo = "pico-fido";
+    repo = "pico-fido2";
     rev = "v${version}";
-    hash = "sha256-ztAW51Zjx37rFlPJqkRfMH/Gv/aV7TvbXJSEPslENek=";
+    hash = "sha256-UA3ibvwaOaCfy7KTfOF7B1gxwE4k+dErNsTxU/FTaW4=";
     fetchSubmodules = true;
   };
 
-  repo = "librekeys/pico-fido";
-  installName = "pico-fido";
-  installPath = "pico_fido.uf2";
+  repo = "librekeys/pico-fido2";
+  installName = "pico-fido2";
+  installPath = "pico_fido2.uf2";
 
   inherit
     picoBoard
@@ -55,4 +55,5 @@ pico-lib.mkPicoDerivation rec {
     secureBootPKey
     extraCmakeFlags
     ;
+
 }

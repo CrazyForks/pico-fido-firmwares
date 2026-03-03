@@ -1,0 +1,65 @@
+---
+name: pico-fido-firmwares matrix build
+
+on:
+  push:
+    tags: [picofido-*, picofidogpg-*, picoopenpgp-*]
+  workflow_dispatch:
+    inputs:
+      releaseTag:
+        type: string
+        required: true
+        description: Tag used at release (e.g., picofido-7.4, picofidogpg-7.4, or
+          picoopenpgp-4.4)
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: librekeys-nixos-x64-runner
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Determine firmware type and version
+        id: vars
+        run: |
+          if [ -n "${{ github.event.inputs.releaseTag }}" ]; then
+            TAG="${{ github.event.inputs.releaseTag }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          if [[ "$TAG" == picofido-* ]]; then
+            echo "firmware=pico-fido" >> $GITHUB_OUTPUT
+          elif [[ "$TAG" == picofidogpg-* ]]; then
+            echo "firmware=pico-fido-gpg" >> $GITHUB_OUTPUT
+          elif [[ "$TAG" == picoopenpgp-* ]]; then
+            echo "firmware=pico-openpgp" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Invalid tag format. Use picofido-X.Y, picofidogpg-X.Y, or picoopenpgp-X.Y"
+            exit 1
+          fi
+          echo "version=${TAG##*-}" >> $GITHUB_OUTPUT
+      - name: Build firmware
+        run: nix build .#${{ steps.vars.outputs.firmware }}-firmwares
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          prerelease: true
+          generate_release_notes: true
+      - name: Upload files
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |-
+          export DIR="result/share/${{ steps.vars.outputs.firmware }}"
+          nix shell nixpkgs#gh -c bash -c '
+            printf "%s\0" "$DIR"/* | xargs -0 -P 4 -I {} gh release upload "${{ steps.vars.outputs.tag }}" "{}" --clobber
+          '
