@@ -3,13 +3,13 @@ name: pico-fido-firmwares matrix build
 
 on:
   push:
-    tags: [picofido-*, picofidogpg-*, picoopenpgp-*]
+    tags: [picofido-*, picofido2-*, picoopenpgp-*]
   workflow_dispatch:
     inputs:
       releaseTag:
         type: string
         required: true
-        description: Tag used at release (e.g., picofido-7.4, picofidogpg-7.4, or
+        description: Tag used at release (e.g., picofido-7.4, picofido2-7.4, or
           picoopenpgp-4.4)
 
 concurrency:
@@ -38,12 +38,12 @@ jobs:
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
           if [[ "$TAG" == picofido-* ]]; then
             echo "firmware=pico-fido" >> $GITHUB_OUTPUT
-          elif [[ "$TAG" == picofidogpg-* ]]; then
-            echo "firmware=pico-fido-gpg" >> $GITHUB_OUTPUT
+          elif [[ "$TAG" == picofido2-* ]]; then
+            echo "firmware=pico-fido2" >> $GITHUB_OUTPUT
           elif [[ "$TAG" == picoopenpgp-* ]]; then
             echo "firmware=pico-openpgp" >> $GITHUB_OUTPUT
           else
-            echo "::error::Invalid tag format. Use picofido-X.Y, picofidogpg-X.Y, or picoopenpgp-X.Y"
+            echo "::error::Invalid tag format. Use picofido-X.Y, picofido2-X.Y, or picoopenpgp-X.Y"
             exit 1
           fi
           echo "version=${TAG##*-}" >> $GITHUB_OUTPUT
