@@ -71,7 +71,6 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     "-DCMAKE_CXX_COMPILER=${lib.getExe' gcc-arm-embedded "arm-none-eabi-g++"}"
     "-DCMAKE_AR=${lib.getExe' gcc-arm-embedded "arm-none-eabi-ar"}"
     "-DCMAKE_RANLIB=${lib.getExe' gcc-arm-embedded "arm-none-eabi-ranlib"}"
-    "-DCMAKE_BUILD_TYPE=MinSizeRel"
   ]
   ++ lib.optionals (picoBoard != "pico") [ "-DPICO_BOARD=${picoBoard}" ]
   ++ lib.optionals (vidpid != "") [ "-DVIDPID=${vidpid}" ]
@@ -82,6 +81,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   ++ lib.optionals enableEdDSA [ "-DENABLE_EDDSA=ON" ]
   ++ lib.optionals (secureBootPKey != null) [ "-DSECURE_BOOT_PKEY=${secureBootPKey}" ]
   ++ extraCmakeFlags;
+
+  cmakeBuildType = if enableEdDSA then "MinSizeRel" else "Release";
 
   installPhase = ''
     runHook preInstall
