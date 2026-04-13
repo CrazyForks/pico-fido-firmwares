@@ -35,7 +35,7 @@ jobs:
       with:
         token: ${{ secrets.WORKFLOW_PR_TOKEN }}
         # Ensure all *-firmwares are on the blacklist.
-        blacklist: default,pico-fido-firmwares,pico-openpgp-firmwares,pico-fido2-fimrwares
+        blacklist: default,pico-fido-firmwares,pico-openpgp-firmwares,pico-fido2-firmwares
         pr-body: |
           Automated changes by the [nix-update-actions](https://github.com/gepbird/nix-update-action) GitHub Action.
         pr-labels: "automated"
